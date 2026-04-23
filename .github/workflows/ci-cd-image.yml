@@ -1,36 +1,49 @@
 name: Build, Push and Deploy Docker Image
 run-name: Build, Push and Deploy Image
+
 on: [push]
+
+permissions:
+  contents: read
+  packages: write
+
 env:
-  IMAGE_NAME: "ghcr.io/jahlajahla/nginx-siti13"
+  IMAGE_NAME: ghcr.io/jahlajahla/nginx-siti13
+
 jobs:
   build-push-image:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
-      - name: Build Image
+
+      - name: Build Docker Image
         run: docker build -t $IMAGE_NAME .
-      - name: List Image
+
+      - name: List Docker Images
         run: docker images
-      - name: Login to GitHub Registry
-        run: echo ${{ secrets.TOKEN_GITHUB }} | docker login ghcr.io -u jahlajahla --password-stdin
-      - name: Push Image
+
+      - name: Login to GitHub Container Registry
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push Docker Image
         run: docker push $IMAGE_NAME
 
   deploy:
     needs: build-push-image
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - name: Login to GitHub Registry
-        run: echo ${{ secrets.TOKEN_GITHUB }} | docker login ghcr.io -u jahlajahla --password-stdin
-      - name: stop and remove existing container
+      - name: Login to GitHub Container Registry
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Stop and remove existing container
         run: docker compose down --rmi all
-      - name: start container
+
+      - name: Start container
         run: docker compose up -d
-      - name: view container
+
+      - name: View running container
         run: docker compose ps
-      - name: check container
+
+      - name: Check container
         run: curl localhost:8080
