@@ -1,0 +1,5 @@
+services:
+  webserver:
+    image: ghcr.io/jahlajahla/nginx-siti13
+    ports:
+      - "8080:80"
